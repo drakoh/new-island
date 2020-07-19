@@ -1,0 +1,222 @@
+---
+openapi: 3.0.2
+info:
+  title: New Island
+  version: 1.0.0
+  description: API to manage reservations of the new island
+paths:
+  /new-island/reservations:
+    get:
+      parameters:
+        - name: email
+          description: Email used for the reservation
+          schema:
+            type: string
+          in: query
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConfirmedReservation'
+          description: Successful call
+        "503":
+          description: Any unforseen error will trigger this response.
+      summary: Get the list of reservation for the provided email
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Reservation'
+        required: true
+      responses:
+        "201":
+          description: Reservation was successful
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unable to create the reservation
+        "503":
+          description: Any unforseen error will trigger this response.
+      summary: Book a reservation
+  /new-island/reservations/{id}:
+    get:
+      parameters:
+        - name: id
+          description: id of the reservation
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmedReservation'
+          description: Success
+        "404":
+          description: Reservation wasn't found
+        "503":
+          description: Any unforseen error will trigger this response.
+      summary: Get details about a reservation
+    delete:
+      parameters:
+        - examples:
+            Usual reservation id format:
+              value: e5b8c28d-2e9d-4b3b-a5f5-053ac0e295df
+          name: id
+          description: Id of the reservation
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "404":
+          description: Referenced reservation id wasn't found.
+        "204":
+          description: Deletion was successful
+        "503":
+          description: Any unforseen error will trigger this response.
+      summary: Delete a booking
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationDates'
+        required: true
+      parameters:
+        - examples:
+            Usual reservation id format:
+              value: e5b8c28d-2e9d-4b3b-a5f5-053ac0e295df
+          name: id
+          description: Id of the reservation
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "204":
+          description: Update was successful
+        "404":
+          description: Reservation wasn't found
+        "503":
+          description: Any unforseen error will trigger this response.
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+          description: Unable to modify reservation
+      summary: Change start/end date of reservation
+  /new-island/vacancy:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+              examples:
+                List of dates:
+                  value: |-
+                    [
+                        "2020-08-01",
+                        "2020-08-02",
+                        "2020-08-03",
+                        "2020-08-07",
+                        "2020-08-12"
+                    ]
+          description: Successful call
+        "503":
+          description: Any unforseen error will trigger this response.
+      summary: List available dates
+components:
+  schemas:
+    ErrorMessage:
+      title: Root Type for ErrorMessage
+      description: Details about the nature of the error
+      type: object
+      properties:
+        message:
+          type: string
+      example:
+        message: Invalid start date
+    ConfirmedReservation:
+      title: Root Type for ConfirmedReservation
+      description: ""
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Reservation'
+        - type: object
+          properties:
+            id:
+              description: Unique identifier for that reservation
+              type: string
+      example: |-
+        [
+          {
+            "id": "e5b8c28d-2e9d-4b3b-a5f5-053ac0e295df",
+            "email": "user@domain.com",
+            "fullName": "John Doe",
+            "startDate": "2020-08-01",
+            "endDate": "2020-08-03"
+          }
+        ]
+    Reservation:
+      title: Root Type for Reservation
+      description: Data structure needed to book a reservation
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReservationDates'
+        - required:
+            - email
+            - fullName
+          type: object
+          properties:
+            email:
+              description: This field indicates the email used for teh reservation
+              type: string
+            fullName:
+              description: This field indicates the full name of the person who booked
+                that reservation.
+              type: string
+      example: |-
+        {
+            "email": "user@domain.com",
+            "fullName": "John Doe",
+            "startDate": "2020-08-01",
+            "endDate": "2020-08-03"
+        }
+    ReservationDates:
+      title: Root Type for ReservationDates
+      description: Date fields for the reservation
+      type: object
+      properties:
+        startDate:
+          format: date
+          description: First day of reservation.
+          type: string
+        endDate:
+          format: date
+          description: Last day of reservation
+          type: string
+      example:
+        startDate: "2020-08-01"
+        endDate: "2020-08-03"
+  responses:
+    Error:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+      description: Generic error payload
