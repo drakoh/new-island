@@ -56,8 +56,12 @@ class ReservationServiceTest {
         }
         when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(reservationDates);
 
-        List<LocalDate> vacancy = reservationService.getVacancy();
+        List<LocalDate> vacancy = reservationService.getVacancy(null, null);
         reservationDates.forEach(rd -> vacancy.forEach(d -> Assertions.assertFalse(rd.getStartDate().equals(d) && rd.getEndDate().equals(d))));
+
+        //Every day should be taken for the first 20 days
+        List<LocalDate> vacancy2 = reservationService.getVacancy(now.plusDays(3), now.plusDays(10));
+        Assertions.assertEquals(0, vacancy2.size());
     }
 
     @Test

@@ -48,19 +48,21 @@ public class ReservationService {
     }
 
     @Transactional
-    public List<LocalDate> getVacancy() {
+    public List<LocalDate> getVacancy(LocalDate startDate, LocalDate endDate) {
         LocalDate now = LocalDate.now(Clock.systemUTC());
         LocalDate nowPlus1Month = now.plus(1, ChronoUnit.MONTHS);
+        LocalDate realStartDate = startDate != null && startDate.isAfter(now) && startDate.isBefore(nowPlus1Month) ? startDate : now;
+        LocalDate realEndDate = endDate != null && endDate.isAfter(now) && endDate.isBefore(nowPlus1Month) ? endDate : nowPlus1Month;
         List<LocalDate> vacancy = new ArrayList<>();
-        for (LocalDate currentDate = now; currentDate.isBefore(nowPlus1Month); currentDate = currentDate.plusDays(1)) {
+        for (LocalDate currentDate = realStartDate; currentDate.isBefore(realEndDate); currentDate = currentDate.plusDays(1)) {
             vacancy.add(currentDate);
         }
-        vacancy.add(nowPlus1Month);
-        String sql = MessageFormat.format("SELECT lower(duration) as start_date,upper(duration) as end_date FROM reservation WHERE ''[{0}, {1}]''::daterange && duration", now, nowPlus1Month);
+        vacancy.add(realEndDate);
+        String sql = MessageFormat.format("SELECT lower(duration) as start_date,upper(duration) as end_date FROM reservation WHERE ''[{0}, {1}]''::daterange && duration", realStartDate, realEndDate);
         jdbcTemplate.query(sql, (resultSet, i) -> {
-            LocalDate startDate = resultSet.getDate(1).toLocalDate();
-            LocalDate endDate = resultSet.getDate(2).toLocalDate();
-            return new ReservationDates().startDate(startDate).endDate(endDate);
+            LocalDate rowStartDate = resultSet.getDate(1).toLocalDate();
+            LocalDate rowEndDate = resultSet.getDate(2).toLocalDate();
+            return new ReservationDates().startDate(rowStartDate).endDate(rowEndDate);
         }).forEach(rd -> {
             for (LocalDate currentDate = rd.getStartDate(); currentDate.isBefore(rd.getEndDate()); currentDate = currentDate.plusDays(1)) {
                 vacancy.remove(currentDate);

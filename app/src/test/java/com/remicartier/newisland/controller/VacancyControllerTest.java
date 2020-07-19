@@ -37,7 +37,7 @@ class VacancyControllerTest {
 
     @Test
     void getVacancy() {
-        when(reservationService.getVacancy()).thenReturn(Collections.singletonList(now));
+        when(reservationService.getVacancy(null, null)).thenReturn(Collections.singletonList(now));
 
         ResponseEntity<LocalDateList> responseEntity = restTemplate.getForEntity("/vacancy", LocalDateList.class);
 
@@ -47,7 +47,7 @@ class VacancyControllerTest {
 
     @Test
     void getVacancyAnyException() {
-        when(reservationService.getVacancy()).thenThrow(new RuntimeException("Nope"));
+        when(reservationService.getVacancy(null, null)).thenThrow(new RuntimeException("Nope"));
 
         ResponseEntity<LocalDateList> responseEntity = restTemplate.getForEntity("/vacancy", LocalDateList.class);
 

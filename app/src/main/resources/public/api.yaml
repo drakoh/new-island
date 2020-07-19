@@ -118,6 +118,19 @@ paths:
       summary: Change start/end date of reservation
   /new-island/vacancy:
     get:
+      parameters:
+        - name: startDate
+          description: Start date for vacancy search
+          schema:
+            type: date
+          in: query
+          required: false
+        - name: endDate
+          description: End date for vacancy search
+          schema:
+            type: date
+          in: query
+          required: false
       responses:
         "200":
           content:
